@@ -18,13 +18,42 @@ class InnValidator extends Validator
     /**
      * @inheritDoc
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
+        $this->registerTranslations();
 
         if (null === $this->message) {
-            $this->message = Yii::t('app', '"{attribute}" must be a valid INN.');
+            $this->message = InnValidator::t('main', '"{attribute}" must be a valid INN.');
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function registerTranslations(): void
+    {
+        Yii::$app->i18n->translations['validators/inn/*'] = [
+            'class' => 'yii\i18n\PhpMessageSource',
+            'sourceLanguage' => 'en-US',
+            'basePath' => __dir__ . '/messages',
+            'fileMap' => [
+                'validators/inn/main' => 'main.php',
+            ],
+        ];
+    }
+
+    /**
+     * @see Yii::t()
+     * @param string $category
+     * @param string $message
+     * @param array $params
+     * @param string|null $language
+     * @return string
+     */
+    public static function t(string $category, string $message, array $params = [], ?string $language = null): string
+    {
+        return Yii::t("validators/inn/{$category}", $message, $params, $language);
     }
 
     /**
