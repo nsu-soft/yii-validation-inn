@@ -59,22 +59,21 @@ class InnValidator extends Validator
     /**
      * @inheritDoc
      */
-    public function validateAttribute($model, $attribute): void
+    public function validateValue($value): ?array
     {
-        $inn = (string)$model->$attribute;
-
-        if (!preg_match('/^(\d{10}|\d{12})$/', $inn)) {
-            $this->addError($model, $attribute, $this->message);
-            return;
+        if (!preg_match('/^(\d{10}|\d{12})$/', $value)) {
+            return [$this->message, []];
         }
 
         $multipliers = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
 
-        if (self::INN_INDIVIDUAL_LENGTH === strlen($inn) && !$this->validateIndividual($inn, $multipliers)) {
-            $this->addError($model, $attribute, $this->message);
-        } else if (self::INN_LEGAL_LENGTH === strlen($inn) && !$this->validateLegal($inn, $multipliers)) {
-            $this->addError($model, $attribute, $this->message);
+        if (self::INN_INDIVIDUAL_LENGTH === strlen($value) && !$this->validateIndividual($value, $multipliers)) {
+            return [$this->message, []];
+        } else if (self::INN_LEGAL_LENGTH === strlen($value) && !$this->validateLegal($value, $multipliers)) {
+            return [$this->message, []];
         }
+
+        return null;
     }
 
     /**
