@@ -9,7 +9,7 @@ If you don't have Composer, you may install it by following instructions at [get
 Then you can install this library using the following command:
 
 ```bash
-composer require nsu-soft/yii-validation-snils
+composer require nsu-soft/yii-validation-inn
 ```
 
 ## Usage

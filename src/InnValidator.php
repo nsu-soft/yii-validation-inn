@@ -165,6 +165,7 @@ class InnValidator extends Validator
 
         $options = [
             'message' => $this->formatMessage($this->message, ['attribute' => $label]),
+            'type' => $this->type,
         ];
 
         if ($this->skipOnEmpty) {
