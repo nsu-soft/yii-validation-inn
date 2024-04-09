@@ -16,6 +16,8 @@ class InnValidatorTest extends Unit
     const CORRECT_INN_LEGAL = '0815687402';
     const INCORRECT_INN_INDIVIDUAL = '012437782039';
     const INCORRECT_INN_LEGAL = '0815687403';
+    const SHORT_INN = '081568740';
+    const LONG_INN = '0124377820380';
     const INCORRECT_INN_TEXT = 'abc';
 
     protected UnitTester $tester;
@@ -48,10 +50,46 @@ class InnValidatorTest extends Unit
         $this->assertFalse($validator->validate(self::INCORRECT_INN_LEGAL));
     }
 
+    public function testShortInn(): void
+    {
+        $validator = new InnValidator();
+        $this->assertFalse($validator->validate(self::SHORT_INN));
+    }
+
+    public function testLongInn(): void
+    {
+        $validator = new InnValidator();
+        $this->assertFalse($validator->validate(self::LONG_INN));
+    }
+
     public function testIncorrectNoDigitInn(): void
     {
         $validator = new InnValidator();
         $this->assertFalse($validator->validate(self::INCORRECT_INN_TEXT));
+    }
+
+    public function testIndividualType(): void
+    {
+        $validator = new InnValidator(['type' => InnValidator::TYPE_INDIVIDUAL]);
+        $this->assertTrue($validator->validate(self::CORRECT_INN_INDIVIDUAL));
+    }
+
+    public function testLegalInnWithIndividualType(): void
+    {
+        $validator = new InnValidator(['type' => InnValidator::TYPE_INDIVIDUAL]);
+        $this->assertFalse($validator->validate(self::CORRECT_INN_LEGAL));
+    }
+
+    public function testLegalType(): void
+    {
+        $validator = new InnValidator(['type' => InnValidator::TYPE_LEGAL]);
+        $this->assertTrue($validator->validate(self::CORRECT_INN_LEGAL));
+    }
+
+    public function testIndividualInnWithLegalType(): void
+    {
+        $validator = new InnValidator(['type' => InnValidator::TYPE_LEGAL]);
+        $this->assertFalse($validator->validate(self::CORRECT_INN_INDIVIDUAL));
     }
 
     public function testErrorMessage(): void

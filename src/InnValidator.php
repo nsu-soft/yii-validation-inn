@@ -9,11 +9,14 @@ use yii\validators\Validator;
 
 class InnValidator extends Validator
 {
-    const INN_INDIVIDUAL_LENGTH = 12;
-    const INN_LEGAL_LENGTH = 10;
+    const TYPE_ANY = 0;
+    const TYPE_INDIVIDUAL = 1;
+    const TYPE_LEGAL = 2;
 
-    const INN_INDIVIDUAL_CHECKSUM_LENGTH = 2;
-    const INN_LEGAL_CHECKSUM_LENGTH = 1;
+    /**
+     * @var int An INN type which need to validate.
+     */
+    public int $type = self::TYPE_ANY;
 
     /**
      * @inheritDoc
@@ -61,15 +64,15 @@ class InnValidator extends Validator
      */
     public function validateValue($value): ?array
     {
-        if (!preg_match('/^(\d{10}|\d{12})$/', $value)) {
+        if (!preg_match('/^\d+$/', $value)) {
             return [$this->message, []];
         }
 
-        $multipliers = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
-
-        if (self::INN_INDIVIDUAL_LENGTH === strlen($value) && !$this->validateIndividual($value, $multipliers)) {
+        if (self::TYPE_ANY === $this->type && !$this->validateIndividual($value) && !$this->validateLegal($value)) {
             return [$this->message, []];
-        } else if (self::INN_LEGAL_LENGTH === strlen($value) && !$this->validateLegal($value, $multipliers)) {
+        } else if (self::TYPE_INDIVIDUAL === $this->type && !$this->validateIndividual($value)) {
+            return [$this->message, []];
+        } else if (self::TYPE_LEGAL === $this->type && !$this->validateLegal($value)) {
             return [$this->message, []];
         }
 
@@ -78,13 +81,16 @@ class InnValidator extends Validator
 
     /**
      * @param string $inn
-     * @param array $multipliers
      * @return bool
      */
-    private function validateIndividual(string $inn, array $multipliers): bool
+    private function validateIndividual(string $inn): bool
     {
-        $innNumberLength = self::INN_INDIVIDUAL_LENGTH - self::INN_INDIVIDUAL_CHECKSUM_LENGTH;
-        $checkDigit1 = $this->calculateCheckDigit($inn, $innNumberLength, $multipliers);
+        if (12 !== strlen($inn)) {
+            return false;
+        }
+
+        $multipliers = $this->getMultiplies();
+        $checkDigit1 = $this->calculateCheckDigit($inn, 10, $multipliers);
 
         if ($checkDigit1 != substr($inn, -2, 1)) {
             return false;
@@ -92,22 +98,34 @@ class InnValidator extends Validator
 
         $firstMultiplier = 3;
         array_unshift($multipliers, $firstMultiplier);
-        $checkDigit2 = $this->calculateCheckDigit($inn, $innNumberLength + 1, $multipliers);
+        $checkDigit2 = $this->calculateCheckDigit($inn, 11, $multipliers);
 
         return $checkDigit2 == substr($inn, -1, 1);
     }
 
     /**
      * @param string $inn
-     * @param array $multipliers
      * @return bool
      */
-    private function validateLegal(string $inn, array $multipliers): bool
+    private function validateLegal(string $inn): bool
     {
+        if (10 !== strlen($inn)) {
+            return false;
+        }
+
+        $multipliers = $this->getMultiplies();
         array_shift($multipliers);
-        $checkDigit = $this->calculateCheckDigit($inn, self::INN_LEGAL_LENGTH - self::INN_LEGAL_CHECKSUM_LENGTH, $multipliers);
+        $checkDigit = $this->calculateCheckDigit($inn, 9, $multipliers);
 
         return $checkDigit == substr($inn, -1, 1);
+    }
+
+    /**
+     * @return int[]
+     */
+    private function getMultiplies(): array
+    {
+        return [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
     }
 
     /**
