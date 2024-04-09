@@ -10,25 +10,25 @@ yii.validation.inn = (value, messages, options) => {
     return;
   }
 
-  const INN_INDIVIDUAL_LENGTH = 12;
-  const INN_LEGAL_LENGTH = 10;
+  const TYPE_ANY = 0;
+  const TYPE_INDIVIDUAL = 1;
+  const TYPE_LEGAL = 2;
 
-  if (![INN_INDIVIDUAL_LENGTH, INN_LEGAL_LENGTH].includes(value.length)) {
+  if (TYPE_ANY === options.type && !validateIndividual(value) && !validateLegal(value)) {
     yii.validation.addMessage(messages, options.message, value);
-    return;
-  }
-
-  const multipliers = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
-
-  if (INN_INDIVIDUAL_LENGTH === value.length && !validateIndividual(value, multipliers)) {
+  } else if (TYPE_INDIVIDUAL === options.type && !validateIndividual(value)) {
     yii.validation.addMessage(messages, options.message, value);
-  } else if (INN_LEGAL_LENGTH === value.length && !validateLegal(value, multipliers)) {
+  } else if (TYPE_LEGAL === options.type && !validateLegal(value)) {
     yii.validation.addMessage(messages, options.message, value);
   }
 
-  function validateIndividual(inn, multipliers) {
-    const INN_LENGTH = 10;
-    const checkDigit1 = calculateCheckDigit(inn, INN_LENGTH, multipliers);
+  function validateIndividual(inn) {
+    if (12 !== inn.length) {
+      return false;
+    }
+
+    const multipliers = getMultipliers();
+    const checkDigit1 = calculateCheckDigit(inn, 10, multipliers);
 
     if (checkDigit1 !== parseInt(inn.slice(-2, -1))) {
       return false;
@@ -36,17 +36,25 @@ yii.validation.inn = (value, messages, options) => {
 
     const firstMultiplier = 3;
     multipliers.unshift(firstMultiplier);
-    const checkDigit2 = calculateCheckDigit(inn, INN_LENGTH + 1, multipliers);
+    const checkDigit2 = calculateCheckDigit(inn, 11, multipliers);
 
     return checkDigit2 === parseInt(inn.slice(-1));
   }
 
-  function validateLegal(inn, multipliers) {
+  function validateLegal(inn) {
+    if (10 !== inn.length) {
+      return false;
+    }
+
+    const multipliers = getMultipliers();
     multipliers.shift();
-    const INN_LENGTH = 9;
-    const checkDigit = calculateCheckDigit(inn, INN_LENGTH, multipliers);
+    const checkDigit = calculateCheckDigit(inn, 9, multipliers);
 
     return checkDigit === parseInt(inn.slice(-1));
+  }
+
+  function getMultipliers() {
+    return [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
   }
 
   function calculateCheckDigit(inn, length, multipliers) {
