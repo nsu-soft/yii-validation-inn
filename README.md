@@ -53,3 +53,19 @@ class InnForm extends Model
     }
 }
 ```
+
+You may specify a type of INN which you want to validate. It may be individual or legal number.
+
+Use this rule to validate individual INN:
+
+```php
+[['inn'], InnValidator::class, 'type' => InnValidator::TYPE_INDIVIDUAL]
+```
+
+Or to validate legal INN:
+
+```php
+[['inn'], InnValidator::class, 'type' => InnValidator::TYPE_LEGAL]
+```
+
+`InnValidator::TYPE_ANY` is used in default.
